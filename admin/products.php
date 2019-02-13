@@ -3,16 +3,25 @@
   include('class/db.class.php');
   include('class/get-products.class.php');
 
+  $pagination = '';
   $products = array();
   $get_products = new GetProducts();
   $products = $get_products->on_load();
+  $pagination = $get_products->pagination();
   //print_r($products);
   if(isset($_GET['records_per_page'])) {
     $records_per_page = $_GET['records_per_page'];
-    $page_no = 1;
-    $get_products = new GetProducts($records_per_page, 1, "ASC", "");
+    $sorting = $_GET['sort'];
+    $column = $_GET['column'];
+    $page_no = $_GET['page_no'];
+    $_SESSION['admin']['sorting'] = $sorting;
+    $_SESSION['admin']['column'] = $column;
+    $_SESSION['admin']['records_per_page'] = $records_per_page;
+    $_SESSION['admin']['page_no'] = $page_no;
+    $get_products = new GetProducts($records_per_page, $page_no, $sorting, $column);
     $products = $get_products->get_products();
-    print_r($products);
+    $pagination = $get_products->pagination();
+    //print_r($products);
   }
 ?>
 
@@ -30,15 +39,26 @@
     <div class="card-body">
       <form class="" action="<?=$_SERVER["PHP_SELF"];?>" method="get">
         <input type="text" id="myInput" class="d-inline" onkeyup="myFunction()" placeholder="Search for names..">
+        <input type="hidden" name="page_no" value="1">
+        <select id="mySelect" name="column" class="d-inline mySelect">
+          <option value="name" <?php echo ($_SESSION['admin']['column'] == 'name') ? 'selected':'' ?>>Name</option>
+          <option value="brand" <?php echo ($_SESSION['admin']['column'] == 'brand') ? 'selected':'' ?>>Brand</option>
+          <option value="category" <?php echo ($_SESSION['admin']['column'] == 'category') ? 'selected':'' ?>>Category</option>
+          <option value="price" <?php echo ($_SESSION['admin']['column'] == 'price') ? 'selected':'' ?>>Price</option>
+          <option value="stock" <?php echo ($_SESSION['admin']['column'] == 'stock') ? 'selected':'' ?>>Stock</option>
+        </select>
+
         <select id="mySelect" name="records_per_page" class="d-inline mySelect">
-          <option value="5">5</option>
-          <option value="10">10</option>
+          <option value="2" <?php echo ($_SESSION['admin']['records_per_page'] == '2') ? 'selected':'' ?>>2</option>
+          <option value="5" <?php echo ($_SESSION['admin']['records_per_page'] == '5') ? 'selected':'' ?>>5</option>
+          <option value="10" <?php echo ($_SESSION['admin']['records_per_page'] == '10') ? 'selected':'' ?>>10</option>
         </select>
 
         <select id="mySelect" name="sort" class="d-inline mySelect">
-          <option value="ASC">Ascending</option>
-          <option value="DESC">Descending</option>
+          <option value="ASC" <?php echo ($_SESSION['admin']['sorting'] == 'ASC') ? 'selected':'' ?>>Ascending</option>
+          <option value="DESC" <?php echo ($_SESSION['admin']['sorting'] == 'DESC') ? 'selected':'' ?>>Descending</option>
         </select>
+
         <button type="submit" class="d-inline btn btn-primary">Apply</button>
       </form>
       <table id="myTable">
@@ -67,7 +87,11 @@
       </table>
     </div>
     <div class="card-footer text-muted">
-      See latest product additions <a href="#">here</a>.
+      <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-center">
+          <?=$pagination;?>
+        </ul>
+      </nav>
     </div>
   </div>
 </div>
